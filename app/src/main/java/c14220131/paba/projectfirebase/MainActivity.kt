@@ -25,6 +25,7 @@ class MainActivity : AppCompatActivity() {
     lateinit var _etProvinsi : EditText
     lateinit var _etIbukota : EditText
     override fun onCreate(savedInstanceState: Bundle?) {
+
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContentView(R.layout.activity_main)
@@ -40,25 +41,48 @@ class MainActivity : AppCompatActivity() {
         val _lvData = findViewById<ListView>(R.id.lvData)
 
         lvAdapter = SimpleAdapter(
-            this,data, android.R.layout.simple_list_item_2, arrayOf<String>("Pro","Ibu",),
-            intArrayOf(android.R.id.text1,
-                android.R.id.text2)
+            this, data, android.R.layout.simple_list_item_2, arrayOf<String>("Pro", "Ibu",),
+            intArrayOf(
+                android.R.id.text1,
+                android.R.id.text2
+            )
         )
         _lvData.adapter = lvAdapter
+
 
         _btnSimpan.setOnClickListener {
             TambahData(db,_etProvinsi.text.toString(),_etIbukota.text.toString())
         }
         readData(db)
+        _lvData.setOnItemLongClickListener { parent,view,position,id->
+            val namaPro = data[position].get("Pro")
+            if (namaPro != null){
+                db.collection("tbProvinsi")
+                    .document(namaPro)
+                    .delete()
+                    .addOnSuccessListener {
+                        Log.d("Firebase", "Berhasil diHapus")
+                        readData(db)
+                    }
+                    .addOnFailureListener {
+                            e->
+                        Log.w("Firebase", e.message.toString())
+                    }
+            }
+            true
 
+        }
     }
     fun TambahData(db:FirebaseFirestore, Provinsi:String,Ibukota:String){
         val dataBaru = daftarProvinsi(Provinsi,Ibukota)
         db.collection("tbProvinsi")
-            .add(dataBaru).addOnSuccessListener {
+            .document(dataBaru.provinsi)
+            .set(dataBaru)
+            .addOnSuccessListener {
                 _etProvinsi.setText("")
                 _etIbukota.setText("")
                 Log.d("Firebase", "Data Berhasil Disimpan")
+                readData(db)
             }
             .addOnFailureListener {
                 Log.d("Firebase", it.message.toString())
