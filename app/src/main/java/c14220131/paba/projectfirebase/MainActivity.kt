@@ -17,6 +17,7 @@ import com.google.firebase.firestore.firestore
 
 class MainActivity : AppCompatActivity() {
     val db = Firebase.firestore
+
     var DataProvinsi = ArrayList<daftarProvinsi>()
     lateinit var lvAdapter : ArrayAdapter<daftarProvinsi>
     lateinit var _etProvinsi : EditText
@@ -44,6 +45,8 @@ class MainActivity : AppCompatActivity() {
         _btnSimpan.setOnClickListener {
             TambahData(db,_etProvinsi.text.toString(),_etIbukota.text.toString())
         }
+        readData(db)
+
     }
     fun TambahData(db:FirebaseFirestore, Provinsi:String,Ibukota:String){
         val dataBaru = daftarProvinsi(Provinsi,Ibukota)
@@ -55,6 +58,24 @@ class MainActivity : AppCompatActivity() {
             }
             .addOnFailureListener {
                 Log.d("Firebase", it.message.toString())
+            }
+    }
+    fun readData(db:FirebaseFirestore){
+        db.collection("tbProvinsi").get()
+            .addOnSuccessListener {
+                result ->
+                DataProvinsi.clear()
+                for(document in result){
+                    val readData = daftarProvinsi(
+                        document.data.get("provinsi").toString(),
+                        document.data.get("ibukota").toString()
+                    )
+                    DataProvinsi.add(readData)
+                }
+                lvAdapter.notifyDataSetChanged()
+            }
+            .addOnFailureListener {
+                Log.d("Firebase",it.message.toString())
             }
     }
 }
